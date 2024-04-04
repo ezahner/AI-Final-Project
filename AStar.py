@@ -72,6 +72,7 @@ class MazeGame:
     def draw_maze(self):
         for x in range(self.rows):
             for y in range(self.cols):
+                ## do the dx dy from find path here to get any missing NWSE connections
                 color = 'maroon' if self.maze[x][y] == 1 else 'white'
                 self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                              (x + 1) * self.cell_size, fill=color)
