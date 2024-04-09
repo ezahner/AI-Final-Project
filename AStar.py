@@ -107,8 +107,15 @@ class MazeGame:
     ############################################################
     #### Manhattan distance
     ############################################################
-    def heuristic(self, pos):
-        return (abs(pos[0] - self.goal_pos[0]) + abs(pos[1] - self.goal_pos[1]))
+    def heuristic(self, pos, alg):
+        if (alg == "astar"):
+            # A Star uses heuristics and actual path cost
+            return (abs(pos[0] - self.goal_pos[0]) + abs(pos[1] - self.goal_pos[1]))
+        else:
+            # Dijkstra uses just actual path cost so heuristics should be 0
+            return 0
+
+
 
     ############################################################
     #### A* Algorithm
