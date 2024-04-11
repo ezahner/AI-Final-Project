@@ -25,6 +25,8 @@ class Cell:
         self.h = 0
         self.f = float("inf")
         self.parent = None
+        self.ward = None
+        self.priority = None
 
     #### Compare two cells based on their evaluation functions
     def __lt__(self, other):
@@ -35,9 +37,11 @@ class Cell:
 # A maze is a grid of size rows X cols
 ######################################################
 class MazeGame:
-    def __init__(self, root, maze):
+    def __init__(self, root, maze, wards, alg):
         self.root = root
         self.maze = maze
+        self.wards = wards
+        self.alg = alg
 
         self.rows = len(maze)
         self.cols = len(maze[0])
@@ -52,8 +56,29 @@ class MazeGame:
 
         #### Start state's initial values for f(n) = g(n) + h(n)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos)
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos)
+        self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
+        self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
+
+        #### Assign ward to each cell
+        for x in range(self.rows):
+            for y in range(self.cols):
+                self.cells[x][y].ward == self.wards[x][y]
+
+        #### Assign priority to each cell
+        for x in range(self.rows):
+            for y in range(self.cols):
+                currentWard = self.cells[x][y].ward
+                if currentWard == 'c' or currentWard == 'e' or currentWard == 'o' or currentWard == 'b':
+                    self.cells[x][y].priority = 5
+                elif currentWard == 'm' or currentWard == 's':
+                    self.cells[x][y].priority = 4
+                elif currentWard == 'h' or currentWard == 'p':
+                    self.cells[x][y].priority = 3
+                elif currentWard == 'd' or currentWard == 'g':
+                    self.cells[x][y].priority = 2
+                elif currentWard == 'a' or currentWard == 'i':
+                    self.cells[x][y].priority = 1
+
 
         #### The maze cell size in pixels
         self.cell_size = 75
