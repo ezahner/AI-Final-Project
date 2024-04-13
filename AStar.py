@@ -56,9 +56,9 @@ class MazeGame:
         self.goal_pos = (self.rows - 1, self.cols - 1)
 
         self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
+        self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.cells[self.goal_pos[0]][self.goal_pos[1]])
 
-        self.goalTest = self.cells[self.goal_pos[0]][self.goal_pos[1]]
-        self.destinations.put((self.goalTest.priority, self.goalTest))
+        self.destinations.put((self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.cells[self.goal_pos[0]][self.goal_pos[1]]))
 
         #### Start state's initial values for f(n) = g(n) + h(n)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
@@ -87,13 +87,13 @@ class MazeGame:
 
 
         #### Testing wards and priorities are correctly assigned
-        for x in range(self.rows):
-            for y in range(self.cols):
-                print(self.cells[x][y])
-            print("\n")
+        # for x in range(self.rows):
+        #     for y in range(self.cols):
+        #         print(self.cells[x][y])
+        #     print("\n")
 
         #### The maze cell size in pixels
-        self.cell_size = 75
+        self.cell_size = 25
         self.canvas = tk.Canvas(root, width=self.cols * self.cell_size, height=self.rows * self.cell_size, bg='white')
         self.canvas.pack()
 
@@ -102,13 +102,13 @@ class MazeGame:
 
         #### Create a loop to allow for multiple goal states and paths to be found
         #### TODO: add update for finding within current ward before priority queue
-        while self.destinations.not_empty:
-            self.goal_pos = self.destinations.get()
-            #### Display the optimum path in the maze
-            self.find_path()
+        #while self.destinations.not_empty:
+        self.goal_test = self.destinations.get()
+        #### Display the optimum path in the maze
+        self.find_path()
 
-            ## sets the new current position to the goal position since the path has been found
-            self.agent_pos = self.goal_pos
+        ## sets the new current position to the goal position since the path has been found
+        self.agent_pos = self.goal_test
 
 
     ############################################################
@@ -127,28 +127,28 @@ class MazeGame:
                     self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
                                             text=text)
 
-        #### Load the animated GIF
-        #### Use this site to resize/crop/recolor gif images: https://ezgif.com/
-        gif_path = "images/ghost.gif"
-        gif = Image.open(gif_path)
-
-        #### Maze/screen locations of the ghost
-        x, y = 1, 5
-        xx, yy = x * self.cell_size, y * self.cell_size
-
-        #### Create a function to animate the GIF
-        def animate(frame_num=0):
-            gif.seek(frame_num)
-            frame = ImageTk.PhotoImage(gif)
-            self.canvas.create_image(xx, yy, anchor=tk.NW, image=frame, tag="image")
-            frame_num = (frame_num + 1) % gif.n_frames
-            self.canvas.after(100, animate, frame_num)
-
-            #### Keep a reference to the frame to prevent it from being garbage collected
-            animate.frame = frame
-
-        #### Start the animation
-        animate()
+        # #### Load the animated GIF
+        # #### Use this site to resize/crop/recolor gif images: https://ezgif.com/
+        # gif_path = "images/ghost.gif"
+        # gif = Image.open(gif_path)
+        #
+        # #### Maze/screen locations of the ghost
+        # x, y = 1, 5
+        # xx, yy = x * self.cell_size, y * self.cell_size
+        #
+        # #### Create a function to animate the GIF
+        # def animate(frame_num=0):
+        #     gif.seek(frame_num)
+        #     frame = ImageTk.PhotoImage(gif)
+        #     self.canvas.create_image(xx, yy, anchor=tk.NW, image=frame, tag="image")
+        #     frame_num = (frame_num + 1) % gif.n_frames
+        #     self.canvas.after(100, animate, frame_num)
+        #
+        #     #### Keep a reference to the frame to prevent it from being garbage collected
+        #     animate.frame = frame
+        #
+        # #### Start the animation
+        # animate()
 
     ############################################################
     #### Manhattan distance
@@ -156,7 +156,7 @@ class MazeGame:
     def heuristic(self, pos, alg):
         if (alg == "astar"):
             # A Star uses heuristics and actual path cost
-            return (abs(pos[0] - self.goal_pos[0]) + abs(pos[1] - self.goal_pos[1]))
+            return (abs(pos[0] - self.goal_test[1].x) + abs(pos[1] - self.goal_test[1].y))
         else:
             # Dijkstra uses just actual path cost so heuristics should be 0
             return 0
