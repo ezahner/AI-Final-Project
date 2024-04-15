@@ -66,6 +66,8 @@ class MazeGame:
                     self.cells[x][y].priority = 2
                 elif currentWard == 'a' or currentWard == 'i':
                     self.cells[x][y].priority = 1
+                else:
+                    self.cells[x][y].priority = 0
 
         #### TODO: add mock data to test
         self.destinations = PriorityQueue()
@@ -107,15 +109,18 @@ class MazeGame:
 
         #### Create a loop to allow for multiple goal states and paths to be found
         #### TODO: add update for finding within current ward before priority queue
-        while not self.destinations.empty():
-            self.priority, self.goal_pos = self.destinations.get()
-            print(self.priority, self.goal_pos)
-            #### Display the optimum path in the maze
-            self.find_path()
-
-            ## sets the new current position to the goal position since the path has been found
-            self.agent_pos = self.goal_pos
-        #self.find_path()
+        # while not self.destinations.empty():
+        #     self.priority, self.goal_pos = self.destinations.get()
+        #     print(self.priority, self.goal_pos)
+        #     #### Display the optimum path in the maze
+        #     self.find_path()
+        #
+        #     ## sets the new current position to the goal position since the path has been found
+        #     self.agent_pos = self.goal_pos
+        self.find_path()
+        #print(self.cells[25][25].priority)
+        #print(self.cells[14][6].priority)
+        #print(self.cells[7][25].priority)
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
@@ -152,45 +157,48 @@ class MazeGame:
     #### A* Algorithm
     ############################################################
     def find_path(self):
-        open_set = PriorityQueue()
+        while not self.destinations.empty():
+            self.priority, self.goal_pos = self.destinations.get()
+            open_set = PriorityQueue()
 
-        #### Add the start state to the queue
-        open_set.put((0, self.agent_pos))
+            #### Add the start state to the queue
+            open_set.put((0, self.agent_pos))
 
-        #### Continue exploring until the queue is exhausted
-        while not open_set.empty():
-            current_cost, current_pos = open_set.get()
-            current_cell = self.cells[current_pos[0]][current_pos[1]]
+            #### Continue exploring until the queue is exhausted
+            while not open_set.empty():
+                current_cost, current_pos = open_set.get()
+                current_cell = self.cells[current_pos[0]][current_pos[1]]
 
-            #### Stop if goal is reached
-            if current_pos == self.goal_pos:
-                self.reconstruct_path()
-                break
+                #### Stop if goal is reached
+                if current_pos == self.goal_pos:
+                    self.reconstruct_path()
+                    break
 
-            #### Agent goes E, W, N, and S, whenever possible
-            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                new_pos = (current_pos[0] + dx, current_pos[1] + dy)
+                #### Agent goes E, W, N, and S, whenever possible
+                for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                    new_pos = (current_pos[0] + dx, current_pos[1] + dy)
 
-                if 0 <= new_pos[0] < self.rows and 0 <= new_pos[1] < self.cols and not self.cells[new_pos[0]][
-                    new_pos[1]].is_wall:
+                    if 0 <= new_pos[0] < self.rows and 0 <= new_pos[1] < self.cols and not self.cells[new_pos[0]][
+                        new_pos[1]].is_wall:
 
-                    #### The cost of moving to a new position is 1 unit
-                    new_g = current_cell.g + 1
+                        #### The cost of moving to a new position is 1 unit
+                        new_g = current_cell.g + 1
 
-                    if new_g < self.cells[new_pos[0]][new_pos[1]].g:
-                        ### Update the path cost g()
-                        self.cells[new_pos[0]][new_pos[1]].g = new_g
+                        if new_g < self.cells[new_pos[0]][new_pos[1]].g:
+                            ### Update the path cost g()
+                            self.cells[new_pos[0]][new_pos[1]].g = new_g
 
-                        ### Update the heurstic h()
-                        # TODO: filled with astar alg for now, will need to update once file input complete
-                        self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos, "astar")
+                            ### Update the heurstic h()
+                            # TODO: filled with astar alg for now, will need to update once file input complete
+                            self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos, "astar")
 
-                        ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
-                        self.cells[new_pos[0]][new_pos[1]].f = new_g + self.cells[new_pos[0]][new_pos[1]].h
-                        self.cells[new_pos[0]][new_pos[1]].parent = current_cell
+                            ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
+                            self.cells[new_pos[0]][new_pos[1]].f = new_g + self.cells[new_pos[0]][new_pos[1]].h
+                            self.cells[new_pos[0]][new_pos[1]].parent = current_cell
 
-                        #### Add the new cell to the priority queue
-                        open_set.put((self.cells[new_pos[0]][new_pos[1]].f, new_pos))
+                            #### Add the new cell to the priority queue
+                            open_set.put((self.cells[new_pos[0]][new_pos[1]].f, new_pos))
+            self.agent_pos = self.goal_pos
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
