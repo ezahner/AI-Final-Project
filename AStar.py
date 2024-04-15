@@ -42,6 +42,7 @@ class MazeGame:
         self.maze = maze
         self.wards = wards
         self.alg = alg
+        self.count = 0
 
         self.rows = len(maze)
         self.cols = len(maze[0])
@@ -76,12 +77,11 @@ class MazeGame:
         self.agent_pos = (3, 5)
 
         #### Goal state:  (rows-1, cols-1) or bottom right
-        self.goal_pos = (25, 25)
+        self.goal_pos = (20, 15)
         self.goal_pos2 = (14, 6)
-        self.goal_pos3 = (7, 25)
+        self.goal_pos3 = (17, 25)
 
         #self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
-
         self.destinations.put((-self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos))
         self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
         self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
@@ -92,12 +92,12 @@ class MazeGame:
         self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
 
 
-        #### Testing wards and priorities are correctly assigned
-        for x in range(self.rows):
-            for y in range(self.cols):
-                print(self.cells[x][y].ward)
-                print(self.cells[x][y].priority)
-            print("\n")
+        # #### Testing wards and priorities are correctly assigned
+        # for x in range(self.rows):
+        #     for y in range(self.cols):
+        #         print(self.cells[x][y].ward)
+        #         print(self.cells[x][y].priority)
+        #     print("\n")
 
         #### The maze cell size in pixels
         self.cell_size = 25
@@ -109,14 +109,15 @@ class MazeGame:
 
         #### Create a loop to allow for multiple goal states and paths to be found
         #### TODO: add update for finding within current ward before priority queue
-        # while not self.destinations.empty():
-        #     self.priority, self.goal_pos = self.destinations.get()
-        #     print(self.priority, self.goal_pos)
-        #     #### Display the optimum path in the maze
-        #     self.find_path()
-        #
-        #     ## sets the new current position to the goal position since the path has been found
-        #     self.agent_pos = self.goal_pos
+        while not self.destinations.empty():
+            self.priority, self.goal_pos = self.destinations.get()
+            print(self.priority, self.goal_pos)
+            #### Display the optimum path in the maze
+            self.find_path()
+
+            ## sets the new current position to the goal position since the path has been found
+            self.agent_pos = self.goal_pos
+        #self.priority, self.goal_pos = self.destinations.get()
         self.find_path()
         #print(self.cells[25][25].priority)
         #print(self.cells[14][6].priority)
@@ -157,8 +158,7 @@ class MazeGame:
     #### A* Algorithm
     ############################################################
     def find_path(self):
-        while not self.destinations.empty():
-            self.priority, self.goal_pos = self.destinations.get()
+        ##self.priority, self.goal_pos = self.destinations.get()
             open_set = PriorityQueue()
 
             #### Add the start state to the queue
@@ -198,7 +198,7 @@ class MazeGame:
 
                             #### Add the new cell to the priority queue
                             open_set.put((self.cells[new_pos[0]][new_pos[1]].f, new_pos))
-            self.agent_pos = self.goal_pos
+            #self.agent_pos = self.goal_pos
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
@@ -211,13 +211,16 @@ class MazeGame:
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill='green')
             current_cell = current_cell.parent
+            print(current_cell.x, current_cell.y)
 
             # Redraw cell with updated g() and h() values
+            color = 'skyblue' if self.count == 0 else 'purple'
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
-                                         (x + 1) * self.cell_size, fill='skyblue')
+                                         (x + 1) * self.cell_size, fill=color)
             text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
             self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
                                     text=text)
+        self.count = 1
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
