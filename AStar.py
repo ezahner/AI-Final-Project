@@ -42,7 +42,7 @@ class MazeGame:
         self.maze = maze
         self.wards = wards
         self.alg = alg
-        self.count = 0
+        #self.priority = 0
 
         self.rows = len(maze)
         self.cols = len(maze[0])
@@ -72,32 +72,31 @@ class MazeGame:
 
         #### TODO: add mock data to test
         self.destinations = PriorityQueue()
+        self.goals_left = []
+        self.goals_complete = []
 
         #### Start state: (0,0) or top left
         self.agent_pos = (3, 5)
 
         #### Goal state:  (rows-1, cols-1) or bottom right
-        self.goal_pos = (20, 15)
+        self.goal_pos = (3, 5)
+        self.goal_pos1 = (20, 15)
         self.goal_pos2 = (14, 6)
         self.goal_pos3 = (17, 25)
 
         #self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
-        self.destinations.put((-self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos))
+        self.destinations.put((-self.cells[self.goal_pos1[0]][self.goal_pos1[1]].priority, self.goal_pos1))
         self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
         self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
+
+        self.goals_left.append(self.goal_pos1)
+        self.goals_left.append(self.goal_pos2)
+        self.goals_left.append(self.goal_pos3)
 
         #### Start state's initial values for f(n) = g(n) + h(n)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
         self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
-
-
-        # #### Testing wards and priorities are correctly assigned
-        # for x in range(self.rows):
-        #     for y in range(self.cols):
-        #         print(self.cells[x][y].ward)
-        #         print(self.cells[x][y].priority)
-        #     print("\n")
 
         #### The maze cell size in pixels
         self.cell_size = 25
@@ -108,17 +107,37 @@ class MazeGame:
 
 
         #### Create a loop to allow for multiple goal states and paths to be found
-        #### TODO: add update for finding within current ward before priority queue
+        #### TODO: test wards are picked before priority
         while not self.destinations.empty():
-            self.priority, self.goal_pos = self.destinations.get()
-            print(self.priority, self.goal_pos)
+            # check list of goals left to see if any are in the same ward first
+            for x in self.goals_left:
+                if self.cells[x[0]][x[1]].ward == self.cells[self.agent_pos[0]][self.agent_pos[1]].ward:
+                    #self.priority = self.cells[x[0]][x[1]].priority
+                    self.goal_pos = x
+                    break
+
+            # goal position not updated, need to move to priority queue for next goal position
+            if self.goal_pos == self.agent_pos:
+                self.priority, self.goal_pos = self.destinations.get()
+                for x in self.goals_complete:
+                    if x == self.goal_pos:
+                        # already completed goal
+                        _, self.goal_pos = self.destinations.get()
+
+            #self.priority, self.goal_pos = self.destinations.get()
+            print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
+
             #### Display the optimum path in the maze
             self.find_path()
 
+            # adds the goal to goals complete list and removes from goals left
+            self.goals_left.remove(self.goal_pos)
+            self.goals_complete.append(self.goal_pos)
+
             ## sets the new current position to the goal position since the path has been found
             self.agent_pos = self.goal_pos
-        #self.priority, self.goal_pos = self.destinations.get()
         self.find_path()
+
         #print(self.cells[25][25].priority)
         #print(self.cells[14][6].priority)
         #print(self.cells[7][25].priority)
@@ -214,13 +233,12 @@ class MazeGame:
             print(current_cell.x, current_cell.y)
 
             # Redraw cell with updated g() and h() values
-            color = 'skyblue' if self.count == 0 else 'purple'
+            color = 'skyblue'
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill=color)
             text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
             self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
                                     text=text)
-        self.count = 1
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
