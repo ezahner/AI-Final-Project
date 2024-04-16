@@ -183,10 +183,40 @@ class MazeGame:
     def draw_maze(self):
         for x in range(self.rows):
             for y in range(self.cols):
-                ## do the dx dy from find path here to get any missing NWSE connections
-                color = 'maroon' if self.maze[x][y] == 1 else 'white'
+                cell_color = 'white'  # Default color for cells
+
+
+                # Assign colors based on ward
+                ward = self.cells[x][y].ward
+                if ward == 'm':
+                    cell_color = 'lightblue'
+                elif ward == 'g':
+                    cell_color = 'firebrick'
+                elif ward == 'e':
+                    cell_color = 'yellow'
+                elif ward == 'a':
+                    cell_color = 'grey'
+                elif ward == 'i':
+                    cell_color = 'powderblue'
+                elif ward == 'o':
+                    cell_color = 'forestgreen'
+                elif ward == 'b':
+                    cell_color = 'mediumpurple'
+                elif ward == 'p':
+                    cell_color = 'yellowgreen'
+                elif ward == 's':
+                    cell_color = 'lightcoral'
+                elif ward == 'd':
+                    cell_color = 'olivedrab'
+                elif ward == 'c':
+                    cell_color = 'sandybrown'
+                elif ward == 'h':
+                    cell_color = 'chocolate'
+
+                if self.cells[x][y].is_wall:
+                    cell_color = 'black'  # Wall color
                 self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
-                                             (x + 1) * self.cell_size, fill=color)
+                                             (x + 1) * self.cell_size, fill=cell_color)
                 if not self.cells[x][y].is_wall:
                     text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
                     self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
@@ -267,7 +297,7 @@ class MazeGame:
             print(current_cell.x, current_cell.y)
 
             # Redraw cell with updated g() and h() values
-            color = 'skyblue'
+            color = 'darkblue'
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill=color)
             text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
