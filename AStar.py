@@ -4,6 +4,8 @@
 ####
 #### AI, Spring 2024
 #######################################################
+import re
+import sys
 import tkinter as tk
 from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
@@ -37,12 +39,11 @@ class Cell:
 # A maze is a grid of size rows X cols
 ######################################################
 class MazeGame:
-    def __init__(self, root, maze, wards, alg):
+    def __init__(self, root, maze, wards, input_file):
         self.root = root
         self.maze = maze
         self.wards = wards
-        self.alg = alg
-        #self.priority = 0
+        self.alg, self.start_pos, self.goal_pos_list = self.parse_input_file(input_file)
 
         self.rows = len(maze)
         self.cols = len(maze[0])
@@ -76,32 +77,32 @@ class MazeGame:
         self.goals_complete = []
 
         #### Start state: (0,0) or top left
-        self.agent_pos = (3, 5)
+        # self.agent_pos = (3, 5)
 
-        #### Goal state:  (rows-1, cols-1) or bottom right
-        ## other test data examples that worked 20, 15    14, 6      17, 25
-        self.goal_pos = (3, 5)
-        self.goal_pos1 = (20, 15)
-        self.goal_pos2 = (14, 6)
-        self.goal_pos3 = (16, 5)
-        self.goal_pos4 = (17, 8)
-
-        #self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
-        self.destinations.put((-self.cells[self.goal_pos1[0]][self.goal_pos1[1]].priority, self.goal_pos1))
-        self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
-        self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
-        self.destinations.put((-self.cells[self.goal_pos4[0]][self.goal_pos4[1]].priority, self.goal_pos4))
-
-
-        self.goals_left.append(self.goal_pos1)
-        self.goals_left.append(self.goal_pos2)
-        self.goals_left.append(self.goal_pos3)
-        self.goals_left.append(self.goal_pos4)
-
-        #### Start state's initial values for f(n) = g(n) + h(n)
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
+        # #### Goal state:  (rows-1, cols-1) or bottom right
+        # ## other test data examples that worked 20, 15    14, 6      17, 25
+        # self.goal_pos = (3, 5)
+        # self.goal_pos1 = (20, 15)
+        # self.goal_pos2 = (14, 6)
+        # self.goal_pos3 = (16, 5)
+        # self.goal_pos4 = (17, 8)
+        #
+        # #self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
+        # self.destinations.put((-self.cells[self.goal_pos1[0]][self.goal_pos1[1]].priority, self.goal_pos1))
+        # self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
+        # self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
+        # self.destinations.put((-self.cells[self.goal_pos4[0]][self.goal_pos4[1]].priority, self.goal_pos4))
+        #
+        #
+        # self.goals_left.append(self.goal_pos1)
+        # self.goals_left.append(self.goal_pos2)
+        # self.goals_left.append(self.goal_pos3)
+        # self.goals_left.append(self.goal_pos4)
+        #
+        # #### Start state's initial values for f(n) = g(n) + h(n)
+        # self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
+        # self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
+        # self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
 
         #### The maze cell size in pixels
         self.cell_size = 25
@@ -110,6 +111,21 @@ class MazeGame:
 
         self.draw_maze()
 
+        ### Testing
+        self.agent_pos = self.start_pos
+
+        for goal_pos in self.goal_pos_list:
+            self.goal_pos = goal_pos
+
+            # Update goal test and destinations for each goal position
+            self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
+            self.destinations.put((-self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos))
+            self.goals_left.append(goal_pos)
+
+            # Reset agent position and calculate heuristic
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
 
         #### Create a loop to allow for multiple goal states and paths to be found
         #### TODO: test wards are picked before priority
@@ -146,6 +162,19 @@ class MazeGame:
         #print(self.cells[25][25].priority)
         #print(self.cells[14][6].priority)
         #print(self.cells[7][25].priority)
+
+    # Read from input file
+    def parse_input_file(self, file_path):
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            # Save algorithm
+            self.alg = lines[0].split(":")[1].strip()
+            self.start_pos_str = lines[1].split(":")[1].strip()
+            self.start_pos = tuple(map(int, self.start_pos_str.strip('()').split(',')))
+            self.delivery_locations_str = lines[2].split(":")[1].strip()
+            self.goal_pos = re.findall(r'\((\d+),\s*(\d+)\)', self.delivery_locations_str)
+            self.goal_pos = [(int(x), int(y)) for x, y in self.goal_pos]
+            return self.alg, self.start_pos, self.goal_pos
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
@@ -361,7 +390,8 @@ floor_plan = [
 root = tk.Tk()
 root.title("A* Maze")
 
-game = MazeGame(root, maze, floor_plan, "astar")
+input_file = sys.argv[1]
+game = MazeGame(root, maze, floor_plan, input_file)
 root.bind("<KeyPress>", game.move_agent)
 
 root.mainloop()
