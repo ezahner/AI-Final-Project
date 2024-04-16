@@ -79,19 +79,24 @@ class MazeGame:
         self.agent_pos = (3, 5)
 
         #### Goal state:  (rows-1, cols-1) or bottom right
+        ## other test data examples that worked 20, 15    14, 6      17, 25
         self.goal_pos = (3, 5)
         self.goal_pos1 = (20, 15)
         self.goal_pos2 = (14, 6)
-        self.goal_pos3 = (17, 25)
+        self.goal_pos3 = (16, 5)
+        self.goal_pos4 = (17, 8)
 
         #self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
         self.destinations.put((-self.cells[self.goal_pos1[0]][self.goal_pos1[1]].priority, self.goal_pos1))
         self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
         self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
+        self.destinations.put((-self.cells[self.goal_pos4[0]][self.goal_pos4[1]].priority, self.goal_pos4))
+
 
         self.goals_left.append(self.goal_pos1)
         self.goals_left.append(self.goal_pos2)
         self.goals_left.append(self.goal_pos3)
+        self.goals_left.append(self.goal_pos4)
 
         #### Start state's initial values for f(n) = g(n) + h(n)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
@@ -125,7 +130,7 @@ class MazeGame:
                         _, self.goal_pos = self.destinations.get()
 
             #self.priority, self.goal_pos = self.destinations.get()
-            print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
+            print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.cells[self.goal_pos[0]][self.goal_pos[1]].ward, self.goal_pos)
 
             #### Display the optimum path in the maze
             self.find_path()
