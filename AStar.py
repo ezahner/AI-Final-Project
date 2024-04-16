@@ -7,6 +7,8 @@
 import tkinter as tk
 from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
+import sys
+import re
 
 
 ######################################################
@@ -37,12 +39,15 @@ class Cell:
 # A maze is a grid of size rows X cols
 ######################################################
 class MazeGame:
-    def __init__(self, root, maze, wards, alg):
+    def __init__(self, root, maze, wards, input_file):
         self.root = root
         self.maze = maze
         self.wards = wards
-        self.alg = alg
         self.count = 0
+
+
+        self.alg, self.start_pos, self.goal_pos_list = self.parse_input_file(input_file)
+
 
         self.rows = len(maze)
         self.cols = len(maze[0])
@@ -74,22 +79,22 @@ class MazeGame:
         self.destinations = PriorityQueue()
 
         #### Start state: (0,0) or top left
-        self.agent_pos = (3, 5)
+        #self.agent_pos = (3, 5)
 
         #### Goal state:  (rows-1, cols-1) or bottom right
-        self.goal_pos = (20, 15)
-        self.goal_pos2 = (14, 6)
-        self.goal_pos3 = (17, 25)
+        #self.goal_pos = (20, 15)
+        #self.goal_pos2 = (14, 6)
+        #self.goal_pos3 = (17, 25)
 
         #self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
-        self.destinations.put((-self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos))
-        self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
-        self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
+        #self.destinations.put((-self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos))
+        #self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
+        #self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
 
         #### Start state's initial values for f(n) = g(n) + h(n)
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
+        #self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
+        #self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
+        #self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
 
 
         # #### Testing wards and priorities are correctly assigned
@@ -109,20 +114,50 @@ class MazeGame:
 
         #### Create a loop to allow for multiple goal states and paths to be found
         #### TODO: add update for finding within current ward before priority queue
-        while not self.destinations.empty():
-            self.priority, self.goal_pos = self.destinations.get()
-            print(self.priority, self.goal_pos)
+        #while not self.destinations.empty():
+            #self.priority, self.goal_pos = self.destinations.get()
+            #print(self.priority, self.goal_pos)
             #### Display the optimum path in the maze
-            self.find_path()
+            #self.find_path()
 
             ## sets the new current position to the goal position since the path has been found
-            self.agent_pos = self.goal_pos
+            #self.agent_pos = self.goal_pos
         #self.priority, self.goal_pos = self.destinations.get()
-        self.find_path()
+        #self.find_path()
         #print(self.cells[25][25].priority)
         #print(self.cells[14][6].priority)
         #print(self.cells[7][25].priority)
 
+        ###Testing
+        self.agent_pos = self.start_pos
+
+        for goal_pos in self.goal_pos_list:
+            self.goal_pos = goal_pos
+
+            # Update goal test and destinations for each goal position
+            self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
+            self.destinations.put((-self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos))
+
+            # Reset agent position and calculate heuristic
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
+
+            # Find path for each goal
+            self.find_path()
+
+    # Read from input file
+    def parse_input_file(self, file_path):
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            # Save algoritm
+            self.alg = lines[0].split(":")[1].strip()
+            self.start_pos_str = lines[1].split(":")[1].strip()
+            self.start_pos = tuple(map(int, self.start_pos_str.strip('()').split(',')))
+            self.delivery_locations_str = lines[2].split(":")[1].strip()
+            self.goal_pos = re.findall(r'\((\d+),\s*(\d+)\)', self.delivery_locations_str)
+            self.goal_pos = [(int(x), int(y)) for x, y in self.goal_pos]
+            return self.alg, self.start_pos, self.goal_pos
     ############################################################
     #### This is for the GUI part. No need to modify this unless
     #### GUI changes are needed.
@@ -190,7 +225,7 @@ class MazeGame:
 
                             ### Update the heurstic h()
                             # TODO: filled with astar alg for now, will need to update once file input complete
-                            self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos, "astar")
+                            self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos, self.alg)
 
                             ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
                             self.cells[new_pos[0]][new_pos[1]].f = new_g + self.cells[new_pos[0]][new_pos[1]].h
@@ -338,10 +373,8 @@ floor_plan = [
 root = tk.Tk()
 root.title("A* Maze")
 
-game = MazeGame(root, maze, floor_plan, "astar")
+input_file = sys.argv[1]
+game = MazeGame(root, maze, floor_plan, input_file)
 root.bind("<KeyPress>", game.move_agent)
 
 root.mainloop()
-
-
-
