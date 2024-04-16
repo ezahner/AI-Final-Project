@@ -273,7 +273,7 @@ class MazeGame:
 
                             ### Update the heurstic h()
                             # TODO: filled with astar alg for now, will need to update once file input complete
-                            self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos, "astar")
+                            self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos, self.alg)
 
                             ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
                             self.cells[new_pos[0]][new_pos[1]].f = new_g + self.cells[new_pos[0]][new_pos[1]].h
