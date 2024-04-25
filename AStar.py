@@ -70,39 +70,19 @@ class MazeGame:
                 elif currentWard == 'a' or currentWard == 'i':
                     self.cells[x][y].priority = 1
                 else:
-                    self.cells[x][y].priority = 0
+                    self.cells[x][y].priority = -1
 
         self.destinations = PriorityQueue()
         self.goals_left = []
         self.goals_complete = []
+        self.same_ward_flag = False
+        self.path_stack = []
 
         #### Start state: (0,0) or top left
         # self.agent_pos = (3, 5)
 
         # #### Goal state:  (rows-1, cols-1) or bottom right
         # ## other test data examples that worked 20, 15    14, 6      17, 25
-        # self.goal_pos = (3, 5)
-        # self.goal_pos1 = (20, 15)
-        # self.goal_pos2 = (14, 6)
-        # self.goal_pos3 = (16, 5)
-        # self.goal_pos4 = (17, 8)
-        #
-        # #self.goal_test = (self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.goal_pos)
-        # self.destinations.put((-self.cells[self.goal_pos1[0]][self.goal_pos1[1]].priority, self.goal_pos1))
-        # self.destinations.put((-self.cells[self.goal_pos2[0]][self.goal_pos2[1]].priority, self.goal_pos2))
-        # self.destinations.put((-self.cells[self.goal_pos3[0]][self.goal_pos3[1]].priority, self.goal_pos3))
-        # self.destinations.put((-self.cells[self.goal_pos4[0]][self.goal_pos4[1]].priority, self.goal_pos4))
-        #
-        #
-        # self.goals_left.append(self.goal_pos1)
-        # self.goals_left.append(self.goal_pos2)
-        # self.goals_left.append(self.goal_pos3)
-        # self.goals_left.append(self.goal_pos4)
-        #
-        # #### Start state's initial values for f(n) = g(n) + h(n)
-        # self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
-        # self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
-        # self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
 
         #### The maze cell size in pixels
         self.cell_size = 25
@@ -127,36 +107,43 @@ class MazeGame:
             self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos, self.alg)
             self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
 
+        print(self.goals_left)
+
         #### Create a loop to allow for multiple goal states and paths to be found
         while not self.destinations.empty():
             # check list of goals left to see if any are in the same ward first
             for x in self.goals_left:
                 if self.cells[x[0]][x[1]].ward == self.cells[self.agent_pos[0]][self.agent_pos[1]].ward:
-                    #self.priority = self.cells[x[0]][x[1]].priority
                     self.goal_pos = x
+                    self.same_ward_flag = True
                     break
 
             # goal position not updated, need to move to priority queue for next goal position
-            if self.goal_pos == self.agent_pos:
+            #if self.goal_pos == self.agent_pos:
+            if not self.same_ward_flag:
                 self.priority, self.goal_pos = self.destinations.get()
                 for x in self.goals_complete:
                     if x == self.goal_pos:
                         # already completed goal
                         _, self.goal_pos = self.destinations.get()
 
-            #self.priority, self.goal_pos = self.destinations.get()
             print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.cells[self.goal_pos[0]][self.goal_pos[1]].ward, self.goal_pos)
 
             #### Display the optimum path in the maze
             self.find_path()
 
             # adds the goal to goals complete list and removes from goals left
+            #if self.goal_pos in self.goals_left:
             self.goals_left.remove(self.goal_pos)
             self.goals_complete.append(self.goal_pos)
+            self.same_ward_flag = False
 
             ## sets the new current position to the goal position since the path has been found
             self.agent_pos = self.goal_pos
         self.find_path()
+
+
+        #### Print out if the robot successfully delivered the needed medications
         if (self.success_flag):
             print("Success finding an optimal path!")
         else:
@@ -298,6 +285,7 @@ class MazeGame:
                                          (x + 1) * self.cell_size, fill='green')
             current_cell = current_cell.parent
             print(current_cell.x, current_cell.y)
+            self.path_stack.append(current_cell)
 
             # Redraw cell with updated g() and h() values
             color = 'darkblue'
@@ -306,6 +294,9 @@ class MazeGame:
             #text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
             #self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
                                     #text=text)
+
+    #def draw_path(self):
+
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
