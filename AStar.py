@@ -153,17 +153,44 @@ class MazeGame:
         #print(self.cells[14][6].priority)
         #print(self.cells[7][25].priority)
 
-    # Read from input file
+        # Read from input file
+
     def parse_input_file(self, file_path):
         with open(file_path, 'r') as file:
-            lines = file.readlines()
-            # Save algorithm
+            # Read from file, turn everything to lower case
+            lines = [line.strip().lower() for line in file.readlines()]
+
+            # Check if the file is 3 lines long
+            if len(lines) < 3:
+                raise ValueError("Error: Input file length must be 3 lines")
+
+            # Check if the first line contains the delivery algorithm
+            if not lines[0].startswith("delivery algorithm:"):
+                raise ValueError("Error: First line should specify the delivery algorithm")
+
+            # Check if the second line contains the start location
+            if not lines[1].startswith("start location:"):
+                raise ValueError("Error: Second line should specify the start location")
+
+            # Check if the third line contains delivery locations
+            if not lines[2].startswith("delivery locations:"):
+                raise ValueError("Error: Third line should specify the delivery locations")
+
+            # Get algorithm
             self.alg = lines[0].split(":")[1].strip()
-            self.start_pos_str = lines[1].split(":")[1].strip()
-            self.start_pos = tuple(map(int, self.start_pos_str.strip('()').split(',')))
-            self.delivery_locations_str = lines[2].split(":")[1].strip()
-            self.goal_pos = re.findall(r'\((\d+),\s*(\d+)\)', self.delivery_locations_str)
-            self.goal_pos = [(int(x), int(y)) for x, y in self.goal_pos]
+
+            # Get start position using regular expression
+            start_match = re.match(r'start location:\s*\((\d+),\s*(\d+)\)', lines[1])
+            if not start_match:
+                raise ValueError("Start location format is incorrect")
+            self.start_pos = tuple(map(int, start_match.groups()))
+
+            # Get delivery locations using regular expression
+            delivery_match = re.findall(r'\((\d+),\s*(\d+)\)', lines[2])
+            if not delivery_match:
+                raise ValueError("Delivery locations format is incorrect")
+            self.goal_pos = [(int(x), int(y)) for x, y in delivery_match]
+
             return self.alg, self.start_pos, self.goal_pos
 
     ############################################################
