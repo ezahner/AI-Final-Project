@@ -217,10 +217,10 @@ class MazeGame:
                     cell_color = 'black'  # Wall color
                 self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                              (x + 1) * self.cell_size, fill=cell_color)
-                if not self.cells[x][y].is_wall:
-                    text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
-                    self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
-                                            text=text)
+                # if not self.cells[x][y].is_wall:
+                #     text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
+                #     self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
+                #                             text=text)
 
 
     ############################################################
@@ -272,7 +272,6 @@ class MazeGame:
                             self.cells[new_pos[0]][new_pos[1]].g = new_g
 
                             ### Update the heurstic h()
-                            # TODO: filled with astar alg for now, will need to update once file input complete
                             self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos, self.alg)
 
                             ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
@@ -300,9 +299,9 @@ class MazeGame:
             color = 'darkblue'
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill=color)
-            text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
-            self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
-                                    text=text)
+            #text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
+            #self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
+                                    #text=text)
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
