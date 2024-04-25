@@ -42,6 +42,7 @@ class MazeGame:
     def __init__(self, root, maze, wards, input_file):
         self.root = root
         self.maze = maze
+        self.success_flag = False
         self.wards = wards
         self.alg, self.start_pos, self.goal_pos_list = self.parse_input_file(input_file)
 
@@ -71,7 +72,6 @@ class MazeGame:
                 else:
                     self.cells[x][y].priority = 0
 
-        #### TODO: add mock data to test
         self.destinations = PriorityQueue()
         self.goals_left = []
         self.goals_complete = []
@@ -111,7 +111,7 @@ class MazeGame:
 
         self.draw_maze()
 
-        ### Testing
+        #### Begin the path finding process
         self.agent_pos = self.start_pos
 
         for goal_pos in self.goal_pos_list:
@@ -128,7 +128,6 @@ class MazeGame:
             self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos, self.alg)
 
         #### Create a loop to allow for multiple goal states and paths to be found
-        #### TODO: test wards are picked before priority
         while not self.destinations.empty():
             # check list of goals left to see if any are in the same ward first
             for x in self.goals_left:
@@ -158,6 +157,10 @@ class MazeGame:
             ## sets the new current position to the goal position since the path has been found
             self.agent_pos = self.goal_pos
         self.find_path()
+        if (self.success_flag):
+            print("Success finding an optimal path!")
+        else:
+            print("Failure: unable to find a path to goal states")
 
         #print(self.cells[25][25].priority)
         #print(self.cells[14][6].priority)
@@ -253,8 +256,9 @@ class MazeGame:
                 current_cell = self.cells[current_pos[0]][current_pos[1]]
 
                 #### Stop if goal is reached
-                if current_pos == self.goal_pos:
+                if current_pos == self.goal_pos and self.goal_pos != self.start_pos:
                     self.reconstruct_path()
+                    self.success_flag = True
                     break
 
                 #### Agent goes E, W, N, and S, whenever possible
