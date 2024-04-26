@@ -75,6 +75,7 @@ class MazeGame:
         self.destinations = PriorityQueue()
         self.goals_left = []
         self.goals_complete = []
+        self.success_goals = []
         self.same_ward_flag = False
         self.path_stack = []
 
@@ -140,7 +141,14 @@ class MazeGame:
 
             ## sets the new current position to the goal position since the path has been found
             self.agent_pos = self.goal_pos
-        self.find_path()
+        #self.find_path()
+
+        #### Highlight goal state
+        # TODO: make it so it only highlights the successful goals
+        for current_cell in self.success_goals:
+            x, y = current_cell[0], current_cell[1]
+            self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
+                                         (x + 1) * self.cell_size, fill="royal blue")
 
 
         #### Print out if the robot successfully delivered the needed medications
@@ -201,8 +209,6 @@ class MazeGame:
         for x in range(self.rows):
             for y in range(self.cols):
                 cell_color = 'white'  # Default color for cells
-
-
                 # Assign colors based on ward
                 ward = self.cells[x][y].ward
                 if ward == 'm':
@@ -263,6 +269,7 @@ class MazeGame:
 
             #### Add the start state to the queue
             open_set.put((0, self.agent_pos))
+            #print(self.agent_pos, "agent pos")
 
             #### Continue exploring until the queue is exhausted
             while not open_set.empty():
@@ -273,6 +280,8 @@ class MazeGame:
                 if current_pos == self.goal_pos and self.goal_pos != self.start_pos:
                     self.reconstruct_path()
                     self.success_flag = True
+                    #print(self.goal_pos, "from path find success")
+                    self.success_goals.append(self.goal_pos)
                     break
 
                 #### Agent goes E, W, N, and S, whenever possible
