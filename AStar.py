@@ -11,6 +11,7 @@ from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
 
 
+
 ######################################################
 
 #### A cell stores f(), g() and h() values
@@ -173,7 +174,7 @@ class MazeGame:
                 raise ValueError("Error: Input file length must be 3 lines")
 
             # Check if the first line contains the delivery algorithm
-            if not lines[0].startswith("delivery algorithm:"):
+            if not (lines[0].startswith("delivery algorithm: astar") or  lines[0].startswith("delivery algorithm: dijkstra")):
                 raise ValueError("Error: First line should specify the delivery algorithm")
 
             # Check if the second line contains the start location
@@ -322,11 +323,11 @@ class MazeGame:
             current_cell = current_cell.parent
             print(current_cell.x, current_cell.y)
             self.path_stack.append(current_cell)
-
             # Redraw cell with updated g() and h() values
             color = 'darkblue'
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill=color)
+
             #text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
             #self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
                                     #text=text)
@@ -434,7 +435,7 @@ floor_plan = [
 	[0, 0, 1, 0, 0, 'o', 'o', 'o', 'o', 'o', 'p', 'h', 'h', 'h', 'h', 'h', 'p', 0, 's', 's', 's', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 1, 0],
 	[0, 0, 1, 0, 0, 'o', 'o', 'o', 'o', 'o', 'p', 'h', 'h', 'h', 'h', 'h', 'p', 0, 's', 's', 's', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 1, 0],
 	[0, 0, 1, 0, 0, 'o', 'o', 'o', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 0, 's', 's', 's', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 1, 0],
-	[0, 0, 1, 0, 0, 'o', 'o', 'o', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 0, 's', 's', 's', 'o', 'o', 'o', 'p', 'p', 'o', 'o', 1, 0],
+	[0, 0, 1, 0, 0, 'o', 'o', 'o', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 0, 's', 's', 's', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 1, 0],
 	[0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 's', 's', 's', 's', 's', 's', 's', 's', 's', 1, 0],
 	[0, 0, 1, 0, 'o', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 's', 'd', 's', 'd', 'd', 's', 's', 's', 's', 1, 0],
 	[0, 0, 1, 0, 'o', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 's', 'd', 'd', 'd', 'd', 's', 's', 's', 's', 1, 0],
