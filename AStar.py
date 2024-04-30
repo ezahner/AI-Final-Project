@@ -9,7 +9,7 @@ import sys
 import tkinter as tk
 from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
-
+import time
 
 
 ######################################################
@@ -111,6 +111,7 @@ class MazeGame:
 
         print(self.goals_left)
 
+
         #### Create a loop to allow for multiple goal states and paths to be found
         while not self.destinations.empty():
             # check list of goals left to see if any are in the same ward first
@@ -130,7 +131,6 @@ class MazeGame:
                         _, self.goal_pos = self.destinations.get()
 
             print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.cells[self.goal_pos[0]][self.goal_pos[1]].ward, self.goal_pos)
-
             #### Display the optimum path in the maze
             self.find_path()
 
@@ -270,7 +270,7 @@ class MazeGame:
 
             #### Add the start state to the queue
             open_set.put((0, self.agent_pos))
-            #print(self.agent_pos, "agent pos")
+            print(self.agent_pos, "agent pos")
 
             #### Continue exploring until the queue is exhausted
             while not open_set.empty():
@@ -314,24 +314,28 @@ class MazeGame:
     #### This is for the GUI part. No need to modify this unless
     #### screen changes are needed.
     ############################################################
-    def reconstruct_path(self):
-        current_cell = self.cells[self.goal_pos[0]][self.goal_pos[1]]
-        while current_cell.parent:
+    def draw_path_with_delay(self):
+        if self.path_stack:
+            current_cell = self.path_stack.pop()
             x, y = current_cell.x, current_cell.y
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill='green')
-            current_cell = current_cell.parent
-            print(current_cell.x, current_cell.y)
-            self.path_stack.append(current_cell)
+            self.root.update()  # Update the GUI to show the drawn path
+            time.sleep(0.1)  # Add a delay between steps
+
             # Redraw cell with updated g() and h() values
             color = 'darkblue'
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill=color)
+            self.draw_path_with_delay()  # Recursively draw the next step
 
-            #text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
-            #self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
-                                    #text=text)
+    def reconstruct_path(self):
+        current_cell = self.cells[self.goal_pos[0]][self.goal_pos[1]]
+        while current_cell.parent:
+            self.path_stack.append(current_cell)
+            current_cell = current_cell.parent
 
+        self.draw_path_with_delay()  # Start drawing the path with a delay
     #def draw_path(self):
 
 
