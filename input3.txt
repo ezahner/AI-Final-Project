@@ -1,0 +1,3 @@
+Delivery algorithm: astar
+Start location: (0,0)
+Delivery locations: (4,6)
