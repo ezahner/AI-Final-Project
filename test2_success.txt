@@ -1,3 +1,0 @@
-Delivery Algoritm: dijkstra
-Start Location: (9,3)
-Delivery Locations: (1,5), (17,8)
