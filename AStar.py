@@ -9,7 +9,7 @@ import sys
 import tkinter as tk
 from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
-
+import time
 
 
 ######################################################
@@ -45,10 +45,7 @@ class MazeGame:
         self.maze = maze
         self.success_flag = False
         self.wards = wards
-        #self.alg, self.start_pos, self.goal_pos_list = self.parse_input_file(input_file)
-        self.alg = "astar"
-        self.start_pos = (3, 5)
-        self.goal_pos_list = [(16, 5), (20, 15), (20, 12)]
+        self.alg, self.start_pos, self.goal_pos_list = self.parse_input_file(input_file)
 
         self.rows = len(maze)
         self.cols = len(maze[0])
@@ -83,6 +80,12 @@ class MazeGame:
         self.same_ward_flag = False
         self.path_stack = []
 
+        #### Start state: (0,0) or top left
+        # self.agent_pos = (3, 5)
+
+        # #### Goal state:  (rows-1, cols-1) or bottom right
+        # ## other test data examples that worked 20, 15    14, 6      17, 25
+
         #### The maze cell size in pixels
         self.cell_size = 25
         self.canvas = tk.Canvas(root, width=self.cols * self.cell_size, height=self.rows * self.cell_size, bg='white')
@@ -108,40 +111,33 @@ class MazeGame:
 
         print(self.goals_left)
 
+
         #### Create a loop to allow for multiple goal states and paths to be found
         while not self.destinations.empty():
-            print("loop 3")
-            if len(self.goals_left) == 0:
-                break
             # check list of goals left to see if any are in the same ward first
             for x in self.goals_left:
                 if self.cells[x[0]][x[1]].ward == self.cells[self.agent_pos[0]][self.agent_pos[1]].ward:
                     self.goal_pos = x
                     self.same_ward_flag = True
-                    print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority,
-                          self.cells[self.goal_pos[0]][self.goal_pos[1]].ward, self.goal_pos)
-                    self.find_path()
-                    self.goals_left.remove(self.goal_pos)
-                    self.goals_complete.append(self.goal_pos)
-                    print("loop")
                     break
 
-
             # goal position not updated, need to move to priority queue for next goal position
-            if not self.same_ward_flag and not self.destinations.empty():
+            #if self.goal_pos == self.agent_pos:
+            if not self.same_ward_flag:
                 self.priority, self.goal_pos = self.destinations.get()
-                while x in self.goals_complete:
-                    _, self.goal_pos = self.destinations.get()
-                    print("loop 2")
-                    #if x == self.goal_pos:
+                for x in self.goals_complete:
+                    if x == self.goal_pos:
                         # already completed goal
+                        _, self.goal_pos = self.destinations.get()
 
-                print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority,
-                      self.cells[self.goal_pos[0]][self.goal_pos[1]].ward, self.goal_pos)
-                self.find_path()
-                self.goals_left.remove(self.goal_pos)
-                self.goals_complete.append(self.goal_pos)
+            print(self.cells[self.goal_pos[0]][self.goal_pos[1]].priority, self.cells[self.goal_pos[0]][self.goal_pos[1]].ward, self.goal_pos)
+            #### Display the optimum path in the maze
+            self.find_path()
 
+            # adds the goal to goals complete list and removes from goals left
+            #if self.goal_pos in self.goals_left:
+            self.goals_left.remove(self.goal_pos)
+            self.goals_complete.append(self.goal_pos)
             self.same_ward_flag = False
 
             ## sets the new current position to the goal position since the path has been found
@@ -162,7 +158,12 @@ class MazeGame:
         else:
             print("Failure: unable to find a path to goal states")
 
-    # Read from input file
+        #print(self.cells[25][25].priority)
+        #print(self.cells[14][6].priority)
+        #print(self.cells[7][25].priority)
+
+        # Read from input file
+
     def parse_input_file(self, file_path):
         with open(file_path, 'r') as file:
             # Read from file, turn everything to lower case
@@ -258,13 +259,6 @@ class MazeGame:
             # Dijkstra uses just actual path cost so heuristics should be 0
             return 0
 
-    def reset_values(self, open_set):
-        while not open_set.empty():
-            _, current_cell = open_set.get()
-            self.cells[current_cell[0]][current_cell[1]].g = float("inf")
-            self.cells[current_cell[0]][current_cell[1]].f = float("inf")
-            self.cells[current_cell[0]][current_cell[1]].h = 0
-        return None
 
 
     ############################################################
@@ -276,7 +270,7 @@ class MazeGame:
 
             #### Add the start state to the queue
             open_set.put((0, self.agent_pos))
-            #print(self.agent_pos, "agent pos")
+            print(self.agent_pos, "agent pos")
 
             #### Continue exploring until the queue is exhausted
             while not open_set.empty():
@@ -285,10 +279,6 @@ class MazeGame:
 
                 #### Stop if goal is reached
                 if current_pos == self.goal_pos and self.goal_pos != self.start_pos:
-                    self.reset_values(open_set)
-                    while not open_set.empty():
-                        # clear the list to make it possible to go backwards
-                        open_set.get()
                     self.reconstruct_path()
                     self.success_flag = True
                     #print(self.goal_pos, "from path find success")
@@ -324,24 +314,28 @@ class MazeGame:
     #### This is for the GUI part. No need to modify this unless
     #### screen changes are needed.
     ############################################################
-    def reconstruct_path(self):
-        current_cell = self.cells[self.goal_pos[0]][self.goal_pos[1]]
-        while current_cell.parent:
+    def draw_path_with_delay(self):
+        if self.path_stack:
+            current_cell = self.path_stack.pop()
             x, y = current_cell.x, current_cell.y
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill='green')
-            current_cell = current_cell.parent
-            print(current_cell.x, current_cell.y)
-            self.path_stack.append(current_cell)
+            self.root.update()  # Update the GUI to show the drawn path
+            time.sleep(0.1)  # Add a delay between steps
+
             # Redraw cell with updated g() and h() values
             color = 'darkblue'
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                          (x + 1) * self.cell_size, fill=color)
+            self.draw_path_with_delay()  # Recursively draw the next step
 
-            #text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
-            #self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
-                                    #text=text)
+    def reconstruct_path(self):
+        current_cell = self.cells[self.goal_pos[0]][self.goal_pos[1]]
+        while current_cell.parent:
+            self.path_stack.append(current_cell)
+            current_cell = current_cell.parent
 
+        self.draw_path_with_delay()  # Start drawing the path with a delay
     #def draw_path(self):
 
 
@@ -461,12 +455,8 @@ floor_plan = [
 root = tk.Tk()
 root.title("A* Maze")
 
-#input_file = sys.argv[1]
-input_file = ""
+input_file = sys.argv[1]
 game = MazeGame(root, maze, floor_plan, input_file)
 root.bind("<KeyPress>", game.move_agent)
 
 root.mainloop()
-
-
-
